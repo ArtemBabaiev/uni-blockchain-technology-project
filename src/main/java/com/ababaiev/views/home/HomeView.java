@@ -5,15 +5,17 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 @PageTitle("Home")
 @Route("")
 @Menu(order = 0, icon = LineAwesomeIconUrl.HOME_SOLID)
-public class HomeView extends Composite<VerticalLayout> {
+@AnonymousAllowed
+public class HomeView extends VerticalLayout {
 
     public HomeView() {
-        getContent().setWidth("100%");
-        getContent().getStyle().set("flex-grow", "1");
+        setSizeFull();
+        add("Home view");
     }
 }

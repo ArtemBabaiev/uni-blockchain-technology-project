@@ -1,0 +1,12 @@
+services:
+  coin-db:
+    image: mariadb:latest
+    environment:
+      - MARIADB_ROOT_PASSWORD=password
+    ports:
+      - 3309:3306
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
