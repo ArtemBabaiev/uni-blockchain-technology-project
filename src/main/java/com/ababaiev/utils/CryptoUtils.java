@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class CryptoUtils {
@@ -41,9 +42,34 @@ public class CryptoUtils {
         return Base64.getEncoder().encodeToString(hash);
     }
 
+    @SneakyThrows
+    public static byte[] sign(String data, PrivateKey privateKey) {
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(privateKey);
+        signature.update(data.getBytes(StandardCharsets.UTF_8));
+
+        return signature.sign();
+    }
 
     public static byte[] sign(String data, byte[] privateKey) {
         return sign(data.getBytes(StandardCharsets.UTF_8), privateKey);
+    }
+
+    public static boolean verify(String data, byte[] signature, byte[] publicKeyBytes) {
+        try {
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PublicKey publicKey = keyFactory.generatePublic(keySpec);
+
+            Signature sig = Signature.getInstance("SHA256withRSA");
+            sig.initVerify(publicKey);
+            sig.update(data.getBytes(StandardCharsets.UTF_8));
+
+            return sig.verify(signature);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @SneakyThrows
@@ -56,7 +82,7 @@ public class CryptoUtils {
     }
 
     @SneakyThrows
-    private static PrivateKey loadPrivateKey(byte[] privateKeyBytes) {
+    public static PrivateKey loadPrivateKey(byte[] privateKeyBytes) {
         String keyContent = new String(privateKeyBytes, StandardCharsets.UTF_8)
                 .replace(PRIVATE_KEY_HEADER, "")
                 .replace(PRIVATE_KEY_FOOTER, "")

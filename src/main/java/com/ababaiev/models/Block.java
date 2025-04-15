@@ -12,16 +12,23 @@ import java.util.List;
 @Setter
 public class Block {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(columnDefinition = "TEXT")
     private String hash;
-    private int nonce;
+    private long nonce;
     @Column(columnDefinition = "TEXT")
     private String previousHash;
     private LocalDateTime timestamp;
 
+    @Lob
+    @Column(columnDefinition = "MEDIUMBLOB")
+    private byte[] signature;
 
-    @OneToMany(mappedBy = "block", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "block")
     private List<BlockTransaction> transactions;
+
+    @Transient
+    private boolean genesisBlock = false;
 }

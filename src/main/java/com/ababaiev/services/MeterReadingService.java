@@ -8,7 +8,8 @@ import com.ababaiev.models.UtilityType;
 import com.ababaiev.repositories.BillRepo;
 import com.ababaiev.repositories.MeterReadingRepo;
 import com.ababaiev.repositories.UserRepo;
-import com.ababaiev.views.meterReading.models.CreateReadingModel;
+import com.ababaiev.utils.CryptoUtils;
+import com.ababaiev.views.profile.models.CreateReadingModel;
 import com.ababaiev.views.profile.models.ReadingGridModel;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,7 @@ public class MeterReadingService {
     }
 
     @Transactional
-    public Bill createMeterReading(CreateReadingModel model) {
+    public MeterReading createMeterReading(CreateReadingModel model) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepo.findByUsername(username);
         var previousReading = meterReadingRepo.findTopByUser_UsernameAndUtilityTypeOrderByTimestampDesc(username, model.getUtilityType());
@@ -59,11 +60,28 @@ public class MeterReadingService {
         Bill bill = new Bill();
         bill.setBillingDate(LocalDateTime.now());
         bill.setAmountDue(model.getUtilityType().getRate() * difference);
+        bill.setMeterReading(meterReading);
+        bill.setHash(CryptoUtils.getHash64(getBillString(bill)));
 
         meterReading.setBill(bill);
+        meterReading.setHash(CryptoUtils.getHash64(getReadingString(meterReading)));
+
         log.info("User {} submitted a new {} reading: {} (diff: {})",
                 username, model.getUtilityType(), model.getReading(), difference);
-        return meterReadingRepo.save(meterReading).getBill();
+
+        return meterReadingRepo.save(meterReading);
+    }
+
+    private String getReadingString(MeterReading meterReading) {
+
+        return "" + meterReading.getUtilityType()
+                + meterReading.getTimestamp()
+                + meterReading.getReadingValue()
+                + (meterReading.getPreviousReading() == null ? "0" : meterReading.getPreviousReading().getHash());
+    }
+
+    private String getBillString(Bill bill) {
+        return "" + bill.getAmountDue() + bill.getBillingDate() + bill.getMeterReading().getUtilityType() + bill.getMeterReading().getHash();
     }
 
     private ReadingGridModel mapToGridModel(MeterReading meterReading) {

@@ -1,4 +1,4 @@
-package com.ababaiev.views.meterReading.models;
+package com.ababaiev.views.profile.models;
 
 import com.ababaiev.models.UtilityType;
 import jakarta.validation.constraints.NotNull;

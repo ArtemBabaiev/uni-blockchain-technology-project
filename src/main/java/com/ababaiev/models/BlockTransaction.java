@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -23,14 +24,11 @@ public class BlockTransaction {
     @Column(columnDefinition = "MEDIUMBLOB")
     private byte[] signature;
 
-    @Enumerated(EnumType.STRING)
-    private UtilityType utilityType;
-
     @ManyToOne
     private User user;
 
-    @OneToOne
-    private Bill bill;
+    @OneToMany(mappedBy = "blockTransaction")
+    private List<Bill> bills;
 
     @ManyToOne
     private Block block;

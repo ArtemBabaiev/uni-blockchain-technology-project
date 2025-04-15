@@ -23,10 +23,13 @@ public class Bill {
     @OneToOne(mappedBy = "bill")
     private MeterReading meterReading;
 
-    @OneToOne(mappedBy = "bill")
+    @Column(columnDefinition = "TEXT")
+    private String hash;
+
+    @ManyToOne
     private PendingTransaction pendingTransaction;
 
-    @OneToOne(mappedBy = "bill")
+    @ManyToOne
     private BlockTransaction blockTransaction;
 
 }

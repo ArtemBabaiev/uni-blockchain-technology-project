@@ -47,6 +47,10 @@ public class BillService {
         return bill;
     }
 
+    public List<Bill> getBills(List<UUID> uuids) {
+        return this.billRepo.findAllById(uuids);
+    }
+
     private BillStatus getStatus(Bill bill) {
         if (bill.getBlockTransaction() != null) {
             return BillStatus.PAID;

@@ -25,6 +25,9 @@ public class MeterReading {
     @ManyToOne
     private User user;
 
+    @Column(columnDefinition = "TEXT")
+    private String hash;
+
     @OneToOne
     private MeterReading previousReading;
 

@@ -1,7 +1,7 @@
-package com.ababaiev.views.meterReading;
+package com.ababaiev.views.profile;
 
 import com.ababaiev.views.components.UtilityTypeComboBox;
-import com.ababaiev.views.meterReading.models.CreateReadingModel;
+import com.ababaiev.views.profile.models.CreateReadingModel;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;

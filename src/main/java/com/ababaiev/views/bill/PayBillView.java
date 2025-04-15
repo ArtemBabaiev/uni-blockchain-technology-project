@@ -10,10 +10,13 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import jakarta.annotation.security.PermitAll;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,6 +35,8 @@ public class PayBillView extends VerticalLayout implements HasUrlParameter<Strin
     private final BillService billService;
     private final TransactionService transactionService;
 
+    HorizontalLayout cardsRow;
+
     public PayBillView(BillService billService, TransactionService transactionService) {
         super();
         this.billService = billService;
@@ -42,18 +47,28 @@ public class PayBillView extends VerticalLayout implements HasUrlParameter<Strin
         payBtn = new Button("Pay");
         payBtn.addClickListener(e -> this.handlePayClick());
         billCard = new BillCardComponent();
-        add(billCard, form, payBtn);
+        cardsRow = new HorizontalLayout();
+        add(cardsRow, form, payBtn);
     }
 
     @Override
     public void setParameter(BeforeEvent beforeEvent, String param) {
         try {
-            billId = UUID.fromString(param);
-            Bill bill = this.billService.getBill(billId);
+            var uuids = Arrays.stream(param.split(",")).map(UUID::fromString).toList();
+            List<Bill> bills = this.billService.getBills(uuids);
+            if (bills.isEmpty()) {
+                beforeEvent.rerouteTo(ProfileView.class);
+            }
+
             PayBillModel model = new PayBillModel();
-            model.setBillId(bill.getId());
+            model.setBillIds(uuids);
             form.setBean(model);
-            billCard.setBill(bill);
+
+            bills.forEach(bill -> {
+                BillCardComponent card = new BillCardComponent();
+                card.setBill(bill);
+                cardsRow.add(card);
+            });
 
         } catch (Exception e){
             Notification.show(e.getMessage()).addThemeVariants(NotificationVariant.LUMO_WARNING);

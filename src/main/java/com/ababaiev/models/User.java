@@ -14,6 +14,8 @@ public class User {
     private String username;
     private String password;
 
+    private double balance;
+
     @Lob
     @Column(columnDefinition = "MEDIUMBLOB")
     private byte[] publicKey;

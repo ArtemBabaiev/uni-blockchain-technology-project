@@ -15,6 +15,8 @@ import com.vaadin.flow.shared.Registration;
 import lombok.Getter;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
+import java.util.List;
 
 public class BillGrid extends Grid<BillGridModel> {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
@@ -26,7 +28,7 @@ public class BillGrid extends Grid<BillGridModel> {
         addComponentColumn(this::getStatusColumn).setHeader("Status");
         appendFooterRow().getCell(dateCol).setComponent(getFooterButtons());
         setAllRowsVisible(true);
-        setSelectionMode(SelectionMode.SINGLE);
+        setSelectionMode(SelectionMode.MULTI);
         setEmptyStateText("No Billings found.");
     }
 
@@ -48,14 +50,11 @@ public class BillGrid extends Grid<BillGridModel> {
             return;
         }
 
-
-
-        BillGridModel selectedItem = selectedItems.iterator().next();
-        if (selectedItem.getStatus() != BillStatus.UNPAID) {
-            Notification.show("Select unpaid bill").addThemeVariants(NotificationVariant.LUMO_WARNING);
+        if (selectedItems.stream().anyMatch(b -> b.getStatus() != BillStatus.UNPAID)) {
+            Notification.show("Select unpaid bill only").addThemeVariants(NotificationVariant.LUMO_WARNING);
             return;
         }
-        fireEvent(new PayBillEvent(this, selectedItem));
+        fireEvent(new PayBillEvent(this, selectedItems));
     }
 
     private Component getStatusColumn(BillGridModel billGridModel) {
@@ -86,11 +85,11 @@ public class BillGrid extends Grid<BillGridModel> {
 
     @Getter
     public static class PayBillEvent extends ComponentEvent<BillGrid> {
-        private BillGridModel model;
+        private Collection<BillGridModel> models;
 
-        public PayBillEvent(BillGrid source, BillGridModel model) {
+        public PayBillEvent(BillGrid source, Collection<BillGridModel> models) {
             super(source, false);
-            this.model = model;
+            this.models = models;
         }
     }
 }
