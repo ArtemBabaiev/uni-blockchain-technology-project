@@ -8,6 +8,7 @@ import com.ababaiev.services.UserService;
 import com.ababaiev.views.bill.PayBillView;
 import com.ababaiev.views.components.UtilityTypeComboBox;
 import com.ababaiev.views.profile.models.AddFundsModel;
+import com.ababaiev.views.profile.models.CreateReadingModel;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -182,6 +183,7 @@ public class ProfileView extends VerticalLayout implements BeforeEnterObserver {
         if (binder.validate().isOk()) {
             try {
                 meterReadingService.createMeterReading(binder.getBean());
+                binder.setBean(new CreateReadingModel());
                 refreshMeterGrid(meterUtilityTypeComboBox.getValue());
                 refreshBillGrid(billUtilityTypeComboBox.getValue());
             } catch (BadRequestException e) {
