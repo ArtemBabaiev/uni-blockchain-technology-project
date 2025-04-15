@@ -96,6 +96,19 @@ public class CryptoUtils {
     }
 
     @SneakyThrows
+    public static PublicKey loadPublicKey(byte[] publicKeyBytes) {
+        String keyContent = new String(publicKeyBytes, StandardCharsets.UTF_8)
+                .replace(PUBLIC_KEY_HEADER, "")
+                .replace(PUBLIC_KEY_FOOTER, "")
+                .replaceAll("\\s", "");
+        byte[] keyBytes = Base64.getDecoder().decode(keyContent);
+
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(keySpec);
+    }
+
+    @SneakyThrows
     public static String getHash64(byte[] data) {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hash = digest.digest(data);

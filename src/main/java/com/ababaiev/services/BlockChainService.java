@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,11 +36,14 @@ public class BlockChainService {
     private UserRepo userRepo;
 
     private static final PrivateKey privateKey;
+    private static final PublicKey publicKey;
 
     static {
         try {
             byte[] privateBytes = BlockChainService.class.getClassLoader().getResourceAsStream("private.pem").readAllBytes();
+            byte[] publicBytes = BlockChainService.class.getClassLoader().getResourceAsStream("public.pub").readAllBytes();
             privateKey = CryptoUtils.loadPrivateKey(privateBytes);
+            publicKey = CryptoUtils.loadPublicKey(publicBytes);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -66,7 +70,9 @@ public class BlockChainService {
                 users.put(pendingTransaction.getUser().getId(), pendingTransaction.getUser());
                 user = users.get(pendingTransaction.getUser().getId());
             }
-            if (user.getBalance() < pendingTransaction.getAmount()){
+            boolean valid = CryptoUtils.verify(pendingTransaction.getHash(), pendingTransaction.getSignature(), pendingTransaction.getUser().getPublicKey());
+
+            if (!valid || user.getBalance() < pendingTransaction.getAmount()){
                 transactionMap.put(pendingTransaction, null);
                 continue;
             }
@@ -82,7 +88,7 @@ public class BlockChainService {
 
 
         if (!validateLatestBlock(latestBlock)){
-            throw new RuntimeException("verification hash does not match");
+            throw new RuntimeException("Block verification failed");
         }
 
         List<BlockTransaction> blockTransactionList = transactionMap.values().stream().filter(Objects::nonNull).collect(Collectors.toList());
@@ -98,7 +104,6 @@ public class BlockChainService {
                 break;
             }
         }
-        System.out.println(concat);
         Block newBlock = new Block();
         newBlock.setHash(newBlockHash);
         newBlock.setNonce(nonce);
@@ -106,7 +111,7 @@ public class BlockChainService {
         newBlock.setTimestamp(LocalDateTime.now());
 
 
-        newBlock.setSignature(CryptoUtils.sign(getBlockString(newBlock), privateKey));
+        newBlock.setSignature(CryptoUtils.sign(newBlockHash, privateKey));
         log.info("Saving new block");
 
         newBlock = blockRepo.save(newBlock);
@@ -142,8 +147,8 @@ public class BlockChainService {
             }
         }
 
-        String verificationHash = CryptoUtils.getHash64(buildMerkleRoot(latestBlock.getTransactions()) + latestBlock.getPreviousHash() + latestBlock.getNonce());
-        return verificationHash.equals(latestBlock.getHash());
+        String calculatedHash = CryptoUtils.getHash64(buildMerkleRoot(latestBlock.getTransactions()) + latestBlock.getPreviousHash() + latestBlock.getNonce());
+        return CryptoUtils.verify(calculatedHash, latestBlock.getSignature(), publicKey.getEncoded());
     }
 
     private Block getLatestBlock() {
@@ -183,9 +188,5 @@ public class BlockChainService {
             hashes = newHashes;
         }
         return hashes.get(0);
-    }
-
-    private String getBlockString(Block block) {
-        return block.getHash() + block.getNonce() + block.getPreviousHash() + block.getTimestamp();
     }
 }
